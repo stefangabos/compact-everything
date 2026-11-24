@@ -19,7 +19,7 @@ When you delete or move messages, Thunderbird does not remove them from disk rig
 - keeps working when the popup is closed, with the progress shown as a percentage on the toolbar button
 - remembers the result of the last run
 
-## screenshots
+## Screenshots
 
 <p>
     <img src="docs/screenshots/ready.png" alt="before compacting" width="320">
