@@ -21,10 +21,10 @@ When you delete or move messages, Thunderbird does not remove them from disk rig
 
 ## Screenshots
 
-<p>
-    <img src="docs/screenshots/ready.png" alt="before compacting" width="320">
-    <img src="docs/screenshots/running.png" alt="while compacting" width="320">
-    <img src="docs/screenshots/done.png" alt="after compacting" width="320">
+<p align="center">
+    <img src="docs/screenshots/ready.png" alt="Before compacting" width="32%">
+    <img src="docs/screenshots/running.png" alt="While compacting" width="32%">
+    <img src="docs/screenshots/done.png" alt="After compacting" width="32%">
 </p>
 
 ## How it works
@@ -35,7 +35,7 @@ The estimate shown before starting comes from Thunderbird's own count of bytes t
 
 Compacting an IMAP folder also expunges it on the server, which permanently removes messages marked as deleted. This is the same as Thunderbird's own compact command.
 
-Thunderbird's extension API has no way to compact folders, so the add-on uses an [experiment API](https://developer.thunderbird.net/add-ons/mailextensions/experiments) for that part. its code is in [`extension/api/compactor`](extension/api/compactor).
+Thunderbird's extension API has no way to compact folders, so the add-on uses an [experiment API](https://developer.thunderbird.net/add-ons/mailextensions/experiments) for that part. Its code is in [`extension/api/compactor`](extension/api/compactor).
 
 ## Requirements
 
@@ -51,7 +51,7 @@ Download the `.xpi` file from the [releases page](https://github.com/stefangabos
 ./build.sh
 ```
 
-packages the `extension` folder into `compact-everything.xpi`.
+Packages the `extension` folder into `compact-everything.xpi`.
 
 ## Privacy
 
