@@ -1,0 +1,281 @@
+:root {
+    color-scheme: light dark;
+    --background: #ffffff;
+    --text: #1c1b22;
+    --muted: #6b6b76;
+    --line: #e4e4ea;
+    --track: #ececf1;
+    --accent: #2a6ad9;
+    --accent_text: #ffffff;
+    --good: #16794a;
+    --bad: #c4314b;
+    --badge_background: #eef0f4;
+    --badge_fill: #d4e2fb;
+    --badge_bad: #fde8ec;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #1f1e25;
+        --text: #f4f4f6;
+        --muted: #a3a3ad;
+        --line: #35343c;
+        --track: #35343c;
+        --accent: #5b93f0;
+        --accent_text: #0d1b33;
+        --good: #5dd39e;
+        --bad: #ff8a9b;
+        --badge_background: #2c2b33;
+        --badge_fill: #2b3f66;
+        --badge_bad: #4a2730;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    background: var(--background);
+    color: var(--text);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* 340px sets the popup width, max-width lets it shrink when a vertical scrollbar takes part of the popup */
+main {
+    width: 340px;
+    max-width: 100%;
+    padding: 16px;
+}
+
+/* minmax(0, 1fr) keeps the column at the popup width instead of growing with long names */
+section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+}
+
+#summary {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+section[hidden] {
+    display: none;
+}
+
+h1 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+h2 {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+p {
+    margin: 0;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.small {
+    font-size: 12px;
+}
+
+.figure {
+    display: grid;
+    gap: 2px;
+}
+
+.label {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.big {
+    font-size: 32px;
+    font-weight: 650;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.accent {
+    color: var(--good);
+}
+
+button {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+    border-color: var(--muted);
+}
+
+button:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent_text);
+}
+
+button.primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--track);
+    overflow: hidden;
+}
+
+.bar_fill {
+    width: 0;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.current li {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--muted);
+}
+
+.current li::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    vertical-align: middle;
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* result lists scroll sideways on their own, the byte badges stay pinned to the right edge above the text */
+.list {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    isolation: isolate;
+}
+
+.list ul {
+    width: max-content;
+    min-width: 100%;
+}
+
+.list li {
+    display: flex;
+    align-items: center;
+    padding: 5px 0 6px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+}
+
+.list li:last-child {
+    border-bottom: 0;
+}
+
+.list .name {
+    flex: 1 0 auto;
+    padding-right: 14px;
+    white-space: nowrap;
+}
+
+.list .value {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    flex: none;
+    display: flex;
+    padding-left: 4px;
+    background: var(--background);
+}
+
+.list .value::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: 18px;
+    background: linear-gradient(to right, transparent, var(--background));
+    pointer-events: none;
+}
+
+.badge {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--badge_fill) var(--share, 0%), var(--badge_background) var(--share, 0%));
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.failed .badge {
+    background: var(--badge_bad);
+    color: var(--bad);
+}
+
+details summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+details[open] summary {
+    margin-bottom: 4px;
+}
+
+details.failed summary {
+    color: var(--bad);
+}

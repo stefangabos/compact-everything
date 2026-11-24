@@ -1,0 +1,49 @@
+[
+  {
+    "namespace": "compactor",
+    "description": "compacts every folder of every account and reports the disk space recovered",
+    "functions": [
+      {
+        "name": "get_state",
+        "type": "function",
+        "description": "returns the current phase, scan totals, progress and the result of the last run",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "scan",
+        "type": "function",
+        "description": "collects all compactable folders with their size on disk and the bytes Thunderbird expects to recover",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "start",
+        "type": "function",
+        "description": "rescans and starts compacting every folder, resolves as soon as the run has started",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "stop",
+        "type": "function",
+        "description": "lets the folders being compacted finish and starts no new ones",
+        "async": true,
+        "parameters": []
+      }
+    ],
+    "events": [
+      {
+        "name": "on_update",
+        "type": "function",
+        "description": "fired whenever the phase or the progress changes",
+        "parameters": [
+          {
+            "name": "state",
+            "type": "any"
+          }
+        ]
+      }
+    ]
+  }
+]

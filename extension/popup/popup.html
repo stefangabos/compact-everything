@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<main>
+    <header>
+        <h1>compact everything</h1>
+        <p id="summary" class="muted small">&nbsp;</p>
+    </header>
+
+    <section id="view_scanning" hidden>
+        <div class="figure">
+            <span class="label">looking at your accounts</span>
+            <span class="big muted">...</span>
+        </div>
+    </section>
+
+    <section id="view_ready" hidden>
+        <div class="figure">
+            <span class="label">likely recoverable</span>
+            <span id="ready_estimate" class="big"></span>
+        </div>
+        <button id="start_button" class="primary" type="button">compact all folders</button>
+        <p id="last_run" class="muted small" hidden></p>
+    </section>
+
+    <section id="view_running" hidden>
+        <div class="figure">
+            <span class="label">recovered so far</span>
+            <span id="running_recovered" class="big"></span>
+        </div>
+        <div class="bar"><div id="running_bar" class="bar_fill"></div></div>
+        <div class="row small">
+            <span id="running_count"></span>
+            <span id="running_percent" class="muted"></span>
+        </div>
+        <ul id="running_current" class="current small"></ul>
+        <button id="stop_button" type="button">stop</button>
+        <p class="muted small">safe to close this popup, the work goes on and the toolbar button shows the progress.</p>
+    </section>
+
+    <section id="view_done" hidden>
+        <div class="figure">
+            <span id="done_label" class="label">recovered</span>
+            <span id="done_recovered" class="big accent"></span>
+        </div>
+        <p id="done_detail" class="muted small"></p>
+        <div id="done_accounts_block">
+            <h2>by account</h2>
+            <div class="list"><ul id="done_accounts"></ul></div>
+        </div>
+        <details id="done_folders_block">
+            <summary>largest gains by folder</summary>
+            <div class="list"><ul id="done_folders"></ul></div>
+        </details>
+        <details id="done_failed_block" class="failed">
+            <summary id="done_failed_summary"></summary>
+            <div class="list"><ul id="done_failed"></ul></div>
+        </details>
+        <button id="rescan_button" type="button">scan again</button>
+    </section>
+</main>
+<script src="popup.js"></script>
+</body>
+</html>
