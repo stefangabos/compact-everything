@@ -39,7 +39,7 @@ Thunderbird's extension API has no way to compact folders, so the add-on uses an
 
 ## Requirements
 
-Thunderbird 128 or newer.
+Thunderbird 128 to 160.
 
 ## Installation
 
