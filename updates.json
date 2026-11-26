@@ -1,0 +1,17 @@
+{
+  "addons": {
+    "compact-everything@stefangabos.github.io": {
+      "updates": [
+        {
+          "version": "1.1",
+          "update_link": "https://github.com/stefangabos/compact-everything/releases/download/1.1/compact-everything.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "128.0"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

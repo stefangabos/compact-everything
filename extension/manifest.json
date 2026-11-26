@@ -2,14 +2,14 @@
   "manifest_version": 2,
   "name": "Compact Everything",
   "description": "compacts every folder in every account and shows how much disk space was recovered",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Stefan Gabos",
   "homepage_url": "https://github.com/stefangabos/compact-everything",
   "browser_specific_settings": {
     "gecko": {
       "id": "compact-everything@stefangabos.github.io",
       "strict_min_version": "128.0",
-      "strict_max_version": "160.*"
+      "update_url": "https://raw.githubusercontent.com/stefangabos/compact-everything/master/updates.json"
     }
   },
   "icons": {

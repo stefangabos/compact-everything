@@ -35,15 +35,27 @@ The estimate shown before starting comes from Thunderbird's own count of bytes t
 
 Compacting an IMAP folder also expunges it on the server, which permanently removes messages marked as deleted. This is the same as Thunderbird's own compact command.
 
-Thunderbird's extension API has no way to compact folders, so the add-on uses an [experiment API](https://developer.thunderbird.net/add-ons/mailextensions/experiments) for that part. Its code is in [`extension/api/compactor`](extension/api/compactor).
+>   At the time of writing, compacting folders from an add-on is only possible through an [experiment API](https://developer.thunderbird.net/add-ons/mailextensions/experiments), and because of that the add-on is not available on addons.thunderbird.net - see below.
+
+## Why it is not on addons.thunderbird.net
+
+Thunderbird's extension API can list folders, move messages and much more, but it cannot compact a folder, nor does it tell how much space a folder takes on disk. The only way for an add-on to do that is through an [experiment API](https://developer.thunderbird.net/add-ons/mailextensions/experiments): privileged code that talks to Thunderbird's internals directly. **Compact Everything** uses one, and through it calls the same compact routine Thunderbird itself uses.
+
+Because experiment APIs have that much access, add-ons using them get a full manual review on addons.thunderbird.net. In March 2026 the Thunderbird add-ons team [paused the review of new add-ons that use experiment APIs](https://thunderbird.topicbox.com/groups/addons/T6ff545fb6d479da5/temporary-pause-on-new-experiment-api-add-on-reviews) because of limited review capacity, and in June 2026 extended the pause until at least the next Thunderbird ESR release, in 2027. Add-ons that were already listed can still publish updates, but new ones cannot get in.
+
+**Compact Everything** was submitted in November 2026 and was turned down for exactly that reason - not because of a problem with the add-on, but because new experiment add-ons are not being accepted at the moment. The only experiments allowed are unmodified copies of the [official API drafts](https://github.com/thunderbird/webext-experiments), and none of them can compact folders.
+
+So it lives here instead. Thunderbird does not require add-ons to be signed, so the release installs from file, and it keeps itself up to date from this repository. If Thunderbird adds folder compacting to its extension API, or the pause is lifted, it can move to addons.thunderbird.net.
 
 ## Requirements
 
-Thunderbird 128 to 160.
+Thunderbird 128 or newer. Tested on Thunderbird 140 ESR and Thunderbird 160.
 
 ## Installation
 
 Download the `.xpi` file from the [releases page](https://github.com/stefangabos/compact-everything/releases) and, in Thunderbird, go to *Add-ons and Themes*, click the gear icon and choose *Install Add-on From File*.
+
+Once installed, the add-on updates itself from this repository, the same way add-ons installed from addons.thunderbird.net do.
 
 ## Building
 
