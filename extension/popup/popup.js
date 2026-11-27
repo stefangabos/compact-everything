@@ -7,9 +7,20 @@ const views = {
     ready: element('view_ready'),
     running: element('view_running'),
     done: element('view_done'),
+    changelog: element('view_changelog'),
+    settings: element('view_settings'),
 };
 
+const homepage_url = 'https://github.com/stefangabos/compact-everything';
+const releases_url = homepage_url + '/releases';
+const default_settings = { show_label: true };
+
 let last_result = null;
+let last_state = null;
+let update_notice = null;
+let settings = { ...default_settings };
+// settings and release notes open on top of the normal content; "back" closes the topmost one
+const overlay_stack = [];
 
 function format_bytes(bytes) {
     const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -136,7 +147,9 @@ function render_done(state) {
     element('done_detail').textContent =
         format_count(result.folder_count, 'folder', 'folders') + ' processed in ' +
         format_duration(result.finished_at - result.started_at) + ', ' +
-        result.shrunk_count.toLocaleString() + ' got smaller.';
+        (result.shrunk_count === 0
+            ? 'nothing was left to compact.'
+            : result.shrunk_count.toLocaleString() + ' got smaller.');
 
     element('done_accounts_block').hidden = result.accounts.length === 0;
     fill_list(
@@ -174,7 +187,12 @@ function render_done(state) {
 }
 
 function render(state) {
+    last_state = state;
     render_summary(state);
+    // settings and release notes stay on screen while runs report progress, until "back" is pressed
+    if (overlay_stack.length) {
+        return;
+    }
     if (state.phase === 'running' || state.phase === 'stopping') {
         render_running(state);
         show_view('running');
@@ -187,6 +205,148 @@ function render(state) {
     } else {
         show_view('scanning');
     }
+}
+
+function compare_versions(first, second) {
+    const first_parts = String(first).split('.').map(Number);
+    const second_parts = String(second).split('.').map(Number);
+    for (let index = 0; index < Math.max(first_parts.length, second_parts.length); index++) {
+        const difference = (first_parts[index] || 0) - (second_parts[index] || 0);
+        if (difference) {
+            return difference;
+        }
+    }
+    return 0;
+}
+
+// reads CHANGELOG.md, which build.sh packs into the add-on, into a list of { version, date, items }
+async function load_changelog() {
+    const response = await fetch(messenger.runtime.getURL('CHANGELOG.md'));
+    if (!response.ok) {
+        throw new Error('CHANGELOG.md is not in the package');
+    }
+    const versions = [];
+    for (const line of (await response.text()).split('\n')) {
+        const heading = line.match(/^## version (\S+) \((.+)\)\s*$/);
+        if (heading) {
+            versions.push({ version: heading[1], date: heading[2], items: [] });
+            continue;
+        }
+        const current = versions[versions.length - 1];
+        if (!current) {
+            continue;
+        }
+        const bullet = line.match(/^- (.*)$/);
+        if (bullet) {
+            current.items.push(bullet[1]);
+        } else if (line.trim() && current.items.length) {
+            current.items[current.items.length - 1] += ' ' + line.trim();
+        }
+    }
+    return versions;
+}
+
+// markdown links and code spans in changelog lines are shown as plain text
+function plain_text(markdown) {
+    return markdown.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/`([^`]+)`/g, '$1');
+}
+
+function releases_link(text) {
+    const link = document.createElement('a');
+    link.href = releases_url;
+    link.className = 'text_link';
+    link.textContent = text;
+    link.addEventListener('click', event => {
+        event.preventDefault();
+        messenger.windows.openDefaultBrowser(releases_url);
+    });
+    return link;
+}
+
+function render_update_link() {
+    const link = element('updated_link');
+    link.hidden = !update_notice;
+    if (update_notice) {
+        link.textContent = 'updated to ' + update_notice.to;
+    }
+}
+
+function open_overlay(name) {
+    if (overlay_stack[overlay_stack.length - 1] !== name) {
+        overlay_stack.push(name);
+    }
+    show_view(name);
+}
+
+function close_overlay() {
+    overlay_stack.pop();
+    if (overlay_stack.length) {
+        show_view(overlay_stack[overlay_stack.length - 1]);
+    } else if (last_state) {
+        render(last_state);
+    }
+}
+
+// replaces the content with release notes: the versions in the given range, or all of them when there is no range,
+// or only the newest one
+async function show_changelog(range, latest_only = false) {
+    const container = element('changelog_content');
+    container.replaceChildren();
+    try {
+        let versions = (await load_changelog()).filter(entry =>
+            !range || (compare_versions(entry.version, range.from) > 0 && compare_versions(entry.version, range.to) <= 0)
+        );
+        if (latest_only) {
+            versions = versions.slice(0, 1);
+        }
+        for (const entry of versions) {
+            const block = document.createElement('div');
+            const heading = document.createElement('h3');
+            heading.textContent = 'version ' + entry.version;
+            const date = document.createElement('p');
+            date.className = 'muted small';
+            date.textContent = entry.date;
+            const list = document.createElement('ul');
+            for (const item of entry.items) {
+                const list_item = document.createElement('li');
+                list_item.textContent = plain_text(item);
+                list.append(list_item);
+            }
+            block.append(heading, date, list);
+            container.append(block);
+        }
+        if (!versions.length) {
+            throw new Error('no notes for these versions');
+        }
+    } catch (error) {
+        const message = document.createElement('p');
+        message.className = 'small';
+        message.textContent = range ? 'updated from ' + range.from + ' to ' + range.to + '. ' : '';
+        message.append(releases_link('see the release notes on GitHub'));
+        container.append(message);
+    }
+    container.append(releases_link('all release notes'));
+    open_overlay('changelog');
+}
+
+// after an update: the notes of every version since the one installed before, shown once
+async function show_update_notes() {
+    if (!update_notice) {
+        return;
+    }
+    const notice = update_notice;
+    update_notice = null;
+    render_update_link();
+    overlay_stack.length = 0;
+    await show_changelog(notice);
+    await messenger.storage.local.remove('update_notice');
+}
+
+function open_settings() {
+    overlay_stack.length = 0;
+    element('show_label_setting').checked = settings.show_label;
+    element('version_value').textContent = 'version ' + messenger.runtime.getManifest().version;
+    open_overlay('settings');
 }
 
 async function scan() {
@@ -202,6 +362,36 @@ element('stop_button').addEventListener('click', async () => {
     render(await messenger.compactor.stop());
 });
 
+element('updated_link').addEventListener('click', show_update_notes);
+
+element('settings_button').addEventListener('click', () => {
+    if (overlay_stack[overlay_stack.length - 1] === 'settings') {
+        overlay_stack.length = 0;
+        render(last_state);
+    } else {
+        open_settings();
+    }
+});
+
+// the background page watches this setting and updates the toolbar button
+element('show_label_setting').addEventListener('change', async event => {
+    settings = { ...settings, show_label: event.target.checked };
+    await messenger.storage.local.set({ settings });
+});
+
+element('release_notes_link').addEventListener('click', event => {
+    event.preventDefault();
+    show_changelog(null, true);
+});
+
+element('github_link').addEventListener('click', event => {
+    event.preventDefault();
+    messenger.windows.openDefaultBrowser(homepage_url);
+});
+
+element('back_button').addEventListener('click', close_overlay);
+element('settings_back_button').addEventListener('click', close_overlay);
+
 element('rescan_button').addEventListener('click', async () => {
     const stored = await messenger.storage.local.get('last_result');
     last_result = stored.last_result || null;
@@ -211,8 +401,11 @@ element('rescan_button').addEventListener('click', async () => {
 messenger.compactor.on_update.addListener(render);
 
 (async () => {
-    const stored = await messenger.storage.local.get('last_result');
+    const stored = await messenger.storage.local.get(['last_result', 'update_notice', 'settings']);
     last_result = stored.last_result || null;
+    update_notice = stored.update_notice || null;
+    settings = { ...default_settings, ...stored.settings };
+    render_update_link();
     const state = await messenger.compactor.get_state();
     render(state);
     // a fresh scan is cheap, so the numbers are rebuilt every time the popup opens while nothing is running

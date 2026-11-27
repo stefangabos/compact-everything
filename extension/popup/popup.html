@@ -7,9 +7,39 @@
 <body>
 <main>
     <header>
-        <h1>compact everything</h1>
+        <div class="title_row">
+            <h1>compact everything</h1>
+            <button id="updated_link" class="update_link" type="button" hidden></button>
+            <button id="settings_button" class="icon_button" type="button" title="settings" aria-label="settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+        </div>
         <p id="summary" class="muted small">&nbsp;</p>
     </header>
+
+    <section id="view_settings" class="settings_view" hidden>
+        <div>
+            <h2>settings</h2>
+            <label class="setting_row">
+                <input type="checkbox" id="show_label_setting">
+                <span>show the name next to the toolbar icon</span>
+            </label>
+        </div>
+        <div>
+            <h2>about</h2>
+            <ul class="info_rows">
+                <li id="version_value"></li>
+                <li><a href="#" id="release_notes_link" class="text_link">release notes</a></li>
+                <li><a href="#" id="github_link" class="text_link">GitHub page</a></li>
+            </ul>
+        </div>
+        <button id="settings_back_button" type="button">back</button>
+    </section>
+
+    <section id="view_changelog" hidden>
+        <div id="changelog_content" class="changelog"></div>
+        <button id="back_button" type="button">back</button>
+    </section>
 
     <section id="view_scanning" hidden>
         <div class="figure">

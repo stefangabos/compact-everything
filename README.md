@@ -18,6 +18,7 @@ When you delete or move messages, Thunderbird does not remove them from disk rig
 - reports the real result, measured on disk: total space recovered, a breakdown by account, the folders that shrank the most, and any folder that could not be compacted, with the reason
 - keeps working when the popup is closed, with the progress shown as a percentage on the toolbar button
 - remembers the result of the last run
+- has a settings page behind the gear icon, to show only the icon on the toolbar button, see the version number and the release notes, and open this page
 
 ## Screenshots
 

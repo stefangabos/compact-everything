@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Compact Everything",
   "description": "compacts every folder in every account and shows how much disk space was recovered",
-  "version": "1.1",
+  "version": "1.2",
   "author": "Stefan Gabos",
   "homepage_url": "https://github.com/stefangabos/compact-everything",
   "browser_specific_settings": {
@@ -22,19 +22,7 @@
   "browser_action": {
     "default_title": "compact everything",
     "default_popup": "popup/popup.html",
-    "default_icon": "icons/toolbar-dark.svg",
-    "theme_icons": [
-      {
-        "light": "icons/toolbar-light.svg",
-        "dark": "icons/toolbar-dark.svg",
-        "size": 16
-      },
-      {
-        "light": "icons/toolbar-light.svg",
-        "dark": "icons/toolbar-dark.svg",
-        "size": 32
-      }
-    ]
+    "default_icon": "icons/icon.svg"
   },
   "background": {
     "scripts": ["background.js"]

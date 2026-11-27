@@ -76,7 +76,7 @@ h1 {
 
 h2 {
     margin: 0 0 4px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--muted);
 }
@@ -278,4 +278,108 @@ details[open] summary {
 
 details.failed summary {
     color: var(--bad);
+}
+
+.title_row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* small pill next to the heading, shown after an update until the release notes have been opened */
+.update_link {
+    width: auto;
+    padding: 1px 8px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--badge_fill);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.update_link:hover:not(:disabled) {
+    filter: brightness(0.96);
+}
+
+.changelog {
+    display: grid;
+    gap: 14px;
+}
+
+.changelog h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.changelog ul {
+    margin: 6px 0 0;
+    padding-left: 16px;
+    list-style: disc;
+}
+
+.changelog li {
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+.text_link {
+    color: var(--accent);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.text_link:hover {
+    text-decoration: underline;
+}
+
+.icon_button {
+    width: auto;
+    margin-left: auto;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    line-height: 0;
+}
+
+.icon_button:hover:not(:disabled) {
+    background: var(--track);
+    color: var(--text);
+}
+
+/* settings and about are two groups: headings sit close to their content, the groups further apart */
+.settings_view {
+    gap: 20px;
+}
+
+.settings_view h2 {
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.setting_row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.setting_row input {
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+.info_rows {
+    display: grid;
+    gap: 8px;
+}
+
+.info_rows li {
+    font-size: 12px;
 }

@@ -268,7 +268,9 @@ async function compact_entry(account_entry, folder_entry) {
         size_after = folder_disk_size(folder);
     }
 
-    const saved_bytes = size_before - size_after;
+    // only shrinkage counts as recovered: a folder with nothing to compact can still grow by a few bytes while it is
+    // processed, as Thunderbird writes bookkeeping to its .msf index or new mail arrives
+    const saved_bytes = Math.max(0, size_before - size_after);
     progress.current.splice(progress.current.indexOf(current), 1);
     progress.done++;
     progress.size_before += size_before;
