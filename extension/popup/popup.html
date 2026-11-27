@@ -43,9 +43,11 @@
 
     <section id="view_scanning" hidden>
         <div class="figure">
-            <span class="label">looking at your accounts</span>
-            <span class="big muted">...</span>
+            <span id="scanning_label" class="label">looking at your accounts</span>
+            <span id="scanning_dots" class="big muted">...</span>
         </div>
+        <p id="scan_error" class="muted small" hidden></p>
+        <button id="retry_button" type="button" hidden>try again</button>
     </section>
 
     <section id="view_ready" hidden>
@@ -93,6 +95,7 @@
         <button id="rescan_button" type="button">scan again</button>
     </section>
 </main>
+<script src="../shared.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

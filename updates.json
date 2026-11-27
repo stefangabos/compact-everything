@@ -9,11 +9,23 @@
             "gecko": {
               "strict_min_version": "128.0"
             }
-          }
+          },
+          "update_hash": "sha256:6a148e565c915213964a263fd18ffdab1eae11293381e813c6be213f34b4f7eb"
         },
         {
           "version": "1.2",
           "update_link": "https://github.com/stefangabos/compact-everything/releases/download/1.2/compact-everything.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "128.0"
+            }
+          },
+          "update_hash": "sha256:4a562dd3a45d40f5766ea87000eee4b7d84151ec09919e3d8c2e6803fca5ba24"
+        },
+        {
+          "version": "1.3",
+          "update_link": "https://github.com/stefangabos/compact-everything/releases/download/1.3/compact-everything.xpi",
+          "update_hash": "sha256:bf6f849fc3f3ac5a26ae910aa532a4bdbcf8ff35852dc82701b2dc22fae868e6",
           "applications": {
             "gecko": {
               "strict_min_version": "128.0"

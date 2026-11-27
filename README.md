@@ -68,7 +68,7 @@ Packages the `extension` folder into `compact-everything.xpi`.
 
 ## Privacy
 
-The add-on does not collect, send or share any data. It reads folder information and file sizes on your computer, and keeps the result of the last run in the add-on's local storage.
+The add-on does not collect, send or share any data. It reads folder information and file sizes on your computer, and keeps the result of the last run in the add-on's local storage. Thunderbird itself checks this repository for new versions of the add-on about once a day, so GitHub sees the IP address of each installation when it does.
 
 ## License
 

@@ -12,6 +12,7 @@
     --badge_background: #eef0f4;
     --badge_fill: #d4e2fb;
     --badge_bad: #fde8ec;
+    --error: #c40000;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,6 +29,7 @@
         --badge_background: #2c2b33;
         --badge_fill: #2b3f66;
         --badge_bad: #4a2730;
+        --error: #ff6b6b;
     }
 }
 
@@ -382,4 +384,11 @@ details.failed summary {
 
 .info_rows li {
     font-size: 12px;
+}
+
+/* same weight and size as the headings of the settings page */
+.label.error {
+    color: var(--error);
+    font-size: 14px;
+    font-weight: 600;
 }

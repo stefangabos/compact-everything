@@ -1,5 +1,7 @@
 'use strict';
 
+/* global shared */
+
 const element = id => document.getElementById(id);
 
 const views = {
@@ -11,16 +13,32 @@ const views = {
     settings: element('view_settings'),
 };
 
-const homepage_url = 'https://github.com/stefangabos/compact-everything';
-const releases_url = homepage_url + '/releases';
-const default_settings = { show_label: true };
+const releases_url = shared.homepage_url + '/releases';
 
 let last_result = null;
 let last_state = null;
 let update_notice = null;
-let settings = { ...default_settings };
+let settings = { ...shared.default_settings };
 // settings and release notes open on top of the normal content; "back" closes the topmost one
 const overlay_stack = [];
+// each request for release notes gets a number, so a slow one that finishes after a newer one or after "back" is
+// dropped instead of showing stale or duplicated notes
+let changelog_request = 0;
+
+function log_error(error) {
+    console.error('compact everything:', error);
+}
+
+// wraps an async event handler so a failure is logged instead of becoming an unhandled rejection
+function guarded(handler) {
+    return async (...parameters) => {
+        try {
+            await handler(...parameters);
+        } catch (error) {
+            log_error(error);
+        }
+    };
+}
 
 function format_bytes(bytes) {
     const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -89,7 +107,7 @@ function fill_list(list, rows, with_share) {
 function render_summary(state) {
     const scan = state.scan;
     if (!scan) {
-        element('summary').textContent = ' ';
+        element('summary').textContent = ' ';
         return;
     }
     // after a run the size on disk is the scanned size minus what the run recovered
@@ -98,6 +116,16 @@ function render_summary(state) {
         format_count(scan.account_count, 'account', 'accounts') + ', ' +
         format_count(scan.folder_count, 'folder', 'folders') + ', ' +
         format_bytes(scan.size_bytes - recovered) + ' on disk';
+}
+
+function render_scanning(state) {
+    const failed = state.phase !== 'scanning' && Boolean(state.error);
+    element('scanning_label').textContent = failed ? 'could not read your accounts' : 'looking at your accounts';
+    element('scanning_label').classList.toggle('error', failed);
+    element('scanning_dots').hidden = failed;
+    element('scan_error').hidden = !failed;
+    element('scan_error').textContent = failed ? state.error : '';
+    element('retry_button').hidden = !failed;
 }
 
 function render_ready(state) {
@@ -117,8 +145,7 @@ function render_ready(state) {
 
 function render_running(state) {
     const progress = state.progress;
-    const total = progress.total || 1;
-    const percent = Math.floor((progress.done * 100) / total);
+    const percent = shared.percent_done(progress);
     element('running_recovered').textContent = format_bytes(progress.recovered_bytes);
     element('running_bar').style.width = percent + '%';
     element('running_count').textContent =
@@ -173,17 +200,18 @@ function render_done(state) {
         true
     );
 
-    element('done_failed_block').hidden = result.failed.length === 0;
-    element('done_failed_summary').textContent =
-        format_count(result.failed.length, 'folder', 'folders') + ' could not be compacted';
-    fill_list(
-        element('done_failed'),
-        result.failed.map(folder => ({
-            name: folder.account_name + ' / ' + folder.folder_label,
-            value: folder.reason,
-        })),
-        false
-    );
+    // the result lists a limited number of failures; the rest are only counted
+    const failed_count = result.failed_count || 0;
+    const failed_rows = result.failed.map(folder => ({
+        name: folder.account_name + ' / ' + folder.folder_label,
+        value: folder.reason,
+    }));
+    if (failed_count > result.failed.length) {
+        failed_rows.push({ name: 'and ' + (failed_count - result.failed.length).toLocaleString() + ' more', value: '' });
+    }
+    element('done_failed_block').hidden = failed_count === 0;
+    element('done_failed_summary').textContent = format_count(failed_count, 'folder', 'folders') + ' could not be compacted';
+    fill_list(element('done_failed'), failed_rows, false);
 }
 
 function render(state) {
@@ -203,40 +231,33 @@ function render(state) {
         render_ready(state);
         show_view('ready');
     } else {
+        render_scanning(state);
         show_view('scanning');
     }
 }
 
-function compare_versions(first, second) {
-    const first_parts = String(first).split('.').map(Number);
-    const second_parts = String(second).split('.').map(Number);
-    for (let index = 0; index < Math.max(first_parts.length, second_parts.length); index++) {
-        const difference = (first_parts[index] || 0) - (second_parts[index] || 0);
-        if (difference) {
-            return difference;
-        }
-    }
-    return 0;
-}
-
-// reads CHANGELOG.md, which build.sh packs into the add-on, into a list of { version, date, items }
+// reads CHANGELOG.md, which build.sh packs into the add-on, into a list of { version, date, items }; any other
+// "## " heading ends the current version, and nested bullets become items of their own
 async function load_changelog() {
     const response = await fetch(messenger.runtime.getURL('CHANGELOG.md'));
     if (!response.ok) {
         throw new Error('CHANGELOG.md is not in the package');
     }
     const versions = [];
-    for (const line of (await response.text()).split('\n')) {
-        const heading = line.match(/^## version (\S+) \((.+)\)\s*$/);
-        if (heading) {
-            versions.push({ version: heading[1], date: heading[2], items: [] });
+    let current = null;
+    for (const line of (await response.text()).split(/\r?\n/)) {
+        if (line.startsWith('## ')) {
+            const heading = line.match(/^## version (\S+) \((.+)\)\s*$/);
+            current = heading ? { version: heading[1], date: heading[2], items: [] } : null;
+            if (current) {
+                versions.push(current);
+            }
             continue;
         }
-        const current = versions[versions.length - 1];
         if (!current) {
             continue;
         }
-        const bullet = line.match(/^- (.*)$/);
+        const bullet = line.match(/^\s*[-*] (.*)$/);
         if (bullet) {
             current.items.push(bullet[1]);
         } else if (line.trim() && current.items.length) {
@@ -258,7 +279,7 @@ function releases_link(text) {
     link.textContent = text;
     link.addEventListener('click', event => {
         event.preventDefault();
-        messenger.windows.openDefaultBrowser(releases_url);
+        messenger.windows.openDefaultBrowser(releases_url).catch(log_error);
     });
     return link;
 }
@@ -279,6 +300,7 @@ function open_overlay(name) {
 }
 
 function close_overlay() {
+    changelog_request++;
     overlay_stack.pop();
     if (overlay_stack.length) {
         show_view(overlay_stack[overlay_stack.length - 1]);
@@ -287,18 +309,20 @@ function close_overlay() {
     }
 }
 
-// replaces the content with release notes: the versions in the given range, or all of them when there is no range,
-// or only the newest one
-async function show_changelog(range, latest_only = false) {
-    const container = element('changelog_content');
-    container.replaceChildren();
+// replaces the content with release notes: the versions in the given range, or only the installed version when
+// there is no range
+async function show_changelog(range) {
+    const request = ++changelog_request;
+    const content = document.createDocumentFragment();
     try {
-        let versions = (await load_changelog()).filter(entry =>
-            !range || (compare_versions(entry.version, range.from) > 0 && compare_versions(entry.version, range.to) <= 0)
-        );
-        if (latest_only) {
-            versions = versions.slice(0, 1);
-        }
+        const all_versions = await load_changelog();
+        const installed_version = messenger.runtime.getManifest().version;
+        const versions = range
+            ? all_versions.filter(entry =>
+                  shared.compare_versions(entry.version, range.from) > 0 &&
+                  shared.compare_versions(entry.version, range.to) <= 0
+              )
+            : all_versions.filter(entry => entry.version === installed_version).slice(0, 1);
         for (const entry of versions) {
             const block = document.createElement('div');
             const heading = document.createElement('h3');
@@ -313,7 +337,7 @@ async function show_changelog(range, latest_only = false) {
                 list.append(list_item);
             }
             block.append(heading, date, list);
-            container.append(block);
+            content.append(block);
         }
         if (!versions.length) {
             throw new Error('no notes for these versions');
@@ -323,9 +347,13 @@ async function show_changelog(range, latest_only = false) {
         message.className = 'small';
         message.textContent = range ? 'updated from ' + range.from + ' to ' + range.to + '. ' : '';
         message.append(releases_link('see the release notes on GitHub'));
-        container.append(message);
+        content.append(message);
     }
-    container.append(releases_link('all release notes'));
+    if (request !== changelog_request) {
+        return;
+    }
+    content.append(releases_link('all release notes'));
+    element('changelog_content').replaceChildren(content);
     open_overlay('changelog');
 }
 
@@ -353,16 +381,18 @@ async function scan() {
     render(await messenger.compactor.scan());
 }
 
-element('start_button').addEventListener('click', async () => {
+element('start_button').addEventListener('click', guarded(async () => {
     element('start_button').disabled = true;
     render(await messenger.compactor.start());
-});
+}));
 
-element('stop_button').addEventListener('click', async () => {
+element('stop_button').addEventListener('click', guarded(async () => {
     render(await messenger.compactor.stop());
-});
+}));
 
-element('updated_link').addEventListener('click', show_update_notes);
+element('retry_button').addEventListener('click', guarded(scan));
+
+element('updated_link').addEventListener('click', guarded(show_update_notes));
 
 element('settings_button').addEventListener('click', () => {
     if (overlay_stack[overlay_stack.length - 1] === 'settings') {
@@ -374,37 +404,37 @@ element('settings_button').addEventListener('click', () => {
 });
 
 // the background page watches this setting and updates the toolbar button
-element('show_label_setting').addEventListener('change', async event => {
+element('show_label_setting').addEventListener('change', guarded(async event => {
     settings = { ...settings, show_label: event.target.checked };
     await messenger.storage.local.set({ settings });
-});
+}));
 
-element('release_notes_link').addEventListener('click', event => {
+element('release_notes_link').addEventListener('click', guarded(async event => {
     event.preventDefault();
-    show_changelog(null, true);
-});
+    await show_changelog(null);
+}));
 
-element('github_link').addEventListener('click', event => {
+element('github_link').addEventListener('click', guarded(async event => {
     event.preventDefault();
-    messenger.windows.openDefaultBrowser(homepage_url);
-});
+    await messenger.windows.openDefaultBrowser(shared.homepage_url);
+}));
 
 element('back_button').addEventListener('click', close_overlay);
 element('settings_back_button').addEventListener('click', close_overlay);
 
-element('rescan_button').addEventListener('click', async () => {
+element('rescan_button').addEventListener('click', guarded(async () => {
     const stored = await messenger.storage.local.get('last_result');
     last_result = stored.last_result || null;
     await scan();
-});
+}));
 
 messenger.compactor.on_update.addListener(render);
 
-(async () => {
+guarded(async () => {
     const stored = await messenger.storage.local.get(['last_result', 'update_notice', 'settings']);
     last_result = stored.last_result || null;
     update_notice = stored.update_notice || null;
-    settings = { ...default_settings, ...stored.settings };
+    settings = { ...shared.default_settings, ...stored.settings };
     render_update_link();
     const state = await messenger.compactor.get_state();
     render(state);
